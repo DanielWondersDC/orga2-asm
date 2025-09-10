@@ -104,8 +104,8 @@ alternate_sum_4_using_c_alternative:
 ; x4 -> RCX
 ; x5 -> R8
 ; x6 -> R9
-; x7 -> STACK [RBP - 4]
-; x8 -> STACK [RBP - 8]
+; x7 -> STACK [RBP + 16]
+; x8 -> STACK [RBP + 24]
 ; (son datos de 32bits, 4 bytes)
 
 alternate_sum_8:
@@ -113,49 +113,51 @@ alternate_sum_8:
   push RBP
   mov RBP, rsp
 
-  sub RSP, 32 ; me hago espacio para 6 datos de 4 bits (24) + 8 para estar alineado
-  mov RDX, [RBP]    ;x3
-  mov RDX, [RBP-4]  ;x4
-  mov RDX, [RBP-8]  ;x5
-  mov RDX, [RBP-12]  ;x6   guardo los 6 ultimos parametros en el stack
-  mov [RBP+4], [RBP-16]  ;x7
-  mov [RBP+8], [RBP-20]  ;x8
+  push R9   ;x6 [rbp -8]
+  push R8  ;x5 [rbp -16]
+  push RCX  ;x4 [rbp -24]
+  push RDX ;x3  [rbp -32] guardo los 6 ultimos parametros en el stack
+  ;mov [RBP+16], [RBP-20]  ;x7 [rbp -40]      estos dos no hace falta guardarlos pues ay esstan en el stack
+  ;mov [RBP+24], [RBP-24]  ;x8 [rbp -48]
 
   call restar_c  ; x1 - x2 -> RAX
 
-  mov RDI, RAX ; guardo el resultado en el rdi para pasarlo como parametro
-  mov [RBP], RSI ; x3 -> 2do param
+  mov RDI, RAX
+  pop RSI ; guardo el resultado en el rdi para pasarlo como parametro
 
   call sumar_c ; (x1-x2) + x3 -> RAX
 
   mov RDI, RAX
-  mov [RBP - 4], RSI
+  pop RSI
 
-  call restar_c ;
+  call restar_c ; ((x1-x2) + x3 ) - x4-> RAX
 
   mov RDI, RAX
-  mov [RBP - 8], RSI
+  pop RSI
+
+  call sumar_c ; (((x1-x2) + x3 ) - x4)  + x5-> RAX
+
+  mov RDI, RAX
+  pop RSI
+
+  call restar_c ; ((((x1-x2) + x3 ) - x4)  + x5) - x6-> RAX
+
+  mov RDI, RAX
+  mov RsI, [rbp + 16]
 
   call sumar_c ;
 
   mov RDI, RAX
-  mov [RBP - 12], RSI
+  mov RsI, [rbp + 24]
 
-  call restar_c ;
+  call restar_c
 
-  mov RDI, RAX
-  mov [RBP - 16], RSI
-
-  call sumar_c ;
-
-  mov RDI, RAX
-  mov [RBP - 20], RSI  ; queda el resultado en RAX, no hay que hacern nada en cuanto a eso
+ ; queda el resultado en RAX, no hay que hacern nada en cuanto a eso
 
 
 	; COMPLETAR
 
 	;epilogo
-  add RSP 32
   pop RBP
 	ret
 
