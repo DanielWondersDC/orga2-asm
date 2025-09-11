@@ -143,7 +143,7 @@ alternate_sum_8:
   call restar_c ; ((((x1-x2) + x3 ) - x4)  + x5) - x6-> RAX
 
   mov RDI, RAX
-  mov RsI, [rbp + 16]
+  mov RsI, [rbp + 16]              ; saco del stack los otros 2 parametros de entrada 
 
   call sumar_c ;
 
@@ -155,8 +155,6 @@ alternate_sum_8:
  ; queda el resultado en RAX, no hay que hacern nada en cuanto a eso
 
 
-	; COMPLETAR
-
 	;epilogo
   pop RBP
 	ret
@@ -165,7 +163,21 @@ alternate_sum_8:
 ; SUGERENCIA: investigar uso de instrucciones para convertir enteros a floats y viceversa
 ;void product_2_f(uint32_t * destination, uint32_t x1, float f1);
 ;registros: destination[?], x1[?], f1[?]
+;DESTINATION int -> RDI
+;x1 int-> RSI
+;f1 float-> XMM0
 product_2_f:
+
+  cvtss2sd xmm0, xmm0 ; f1 float -> Double 
+
+  cvtsi2ss xmm1 ,RSI; x1 ->float
+  cvtss2sd xmm1, xmm1 ; x1 float -> double
+
+  mulsd xmm0, xmm1
+
+  cvttsd2si eax, xmm0     ; eax = (int)(f1 * x1)
+  mov [rdi], eax  
+
 	ret
 
 
