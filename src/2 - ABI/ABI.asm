@@ -170,7 +170,7 @@ product_2_f:
 
   cvtss2sd xmm0, xmm0 ; f1 float -> Double 
 
-  cvtsi2ss xmm1 ,RSI; x1 ->float
+  cvtsi2ss xmm1 ,RSI; x1 int -> float
   cvtss2sd xmm1, xmm1 ; x1 float -> double
 
   mulsd xmm0, xmm1
@@ -181,6 +181,7 @@ product_2_f:
 	ret
 
 
+
 ;extern void product_9_f(double * destination
 ;, uint32_t x1, float f1, uint32_t x2, float f2, uint32_t x3, float f3, uint32_t x4, float f4
 ;, uint32_t x5, float f5, uint32_t x6, float f6, uint32_t x7, float f7, uint32_t x8, float f8
@@ -188,21 +189,94 @@ product_2_f:
 ;registros y pila: destination[rdi], x1[?], f1[?], x2[?], f2[?], x3[?], f3[?], x4[?], f4[?]
 ;	, x5[?], f5[?], x6[?], f6[?], x7[?], f7[?], x8[?], f8[?],
 ;	, x9[?], f9[?]
+; destination int -> RDI
+; x1 int -> RSI
+; f1 loat -> XMM0
+; x2 int -> RDX
+; f2 loat -> XMM1
+; x3 int -> RCX
+; f3 loat -> XMM2
+; x4 int -> R8
+; f4 loat -> XMM3
+; x5 int -> R9
+; f5 loat -> XMM4
+; x6 int -> [RBP + 16]
+; f6 loat -> XMM5
+; x7 int -> [RBP + 24]
+; f7 loat -> XMM6
+; x8 int -> [RBP + 32]
+; f8 loat -> XMM7
+; x9 int -> [RBP + 40]
+; f9 float -> [rbp + 48]
+global product_9_f
 product_9_f:
-	;prologo
-	push rbp
-	mov rbp, rsp
+    push rbp
+    mov rbp, rsp
 
-	;convertimos los flotantes de cada registro xmm en doubles
-	; COMPLETAR
+    ; Convert float params (f1–f8) to double
+    cvtss2sd xmm0, xmm0        ; xmm0 = (double)f1
+    cvtss2sd xmm1, xmm1        ; xmm1 = (double)f2
+    cvtss2sd xmm2, xmm2        ; xmm2 = (double)f3
+    cvtss2sd xmm3, xmm3        ; xmm3 = (double)f4
+    cvtss2sd xmm4, xmm4        ; xmm4 = (double)f5
+    cvtss2sd xmm5, xmm5        ; xmm5 = (double)f6
+    cvtss2sd xmm6, xmm6        ; xmm6 = (double)f7
+    cvtss2sd xmm7, xmm7        ; xmm7 = (double)f8
+    cvtss2sd xmm9, [RBP +48]
 
-	;multiplicamos los doubles en xmm0 <- xmm0 * xmm1, xmmo * xmm2 , ...
-	; COMPLETAR
+    ; Multiply all floats: xmm0 = f1 * f2 * ... * f8
+    mulsd xmm0, xmm1
+    mulsd xmm0, xmm2
+    mulsd xmm0, xmm3
+    mulsd xmm0, xmm4
+    mulsd xmm0, xmm5
+    mulsd xmm0, xmm6
+    mulsd xmm0, xmm7
+    mulsd xmm0, xmm9
 
-	; convertimos los enteros en doubles y los multiplicamos por xmm0.
-	; COMPLETAR
+    ; x1 (RSI)
+    cvtsi2sd xmm8, rsi
+    mulsd xmm0, xmm8
 
-	; epilogo
-	pop rbp
-	ret
+    ; x2 (RDX)
+    cvtsi2sd xmm8, rdx
+    mulsd xmm0, xmm8
+
+    ; x3 (RCX)
+    cvtsi2sd xmm8, rcx
+    mulsd xmm0, xmm8
+
+    ; x4 (R8)
+    cvtsi2sd xmm8, r8
+    mulsd xmm0, xmm8
+
+    ; x5 (R9)
+    cvtsi2sd xmm8, r9
+    mulsd xmm0, xmm8
+
+    ; x6 (stack: [rbp + 16])
+    mov eax, dword [rbp + 16]
+    cvtsi2sd xmm8, eax
+    mulsd xmm0, xmm8
+
+    ; x7 (stack: [rbp + 24])
+    mov eax, dword [rbp + 24]
+    cvtsi2sd xmm8, eax
+    mulsd xmm0, xmm8
+
+    ; x8 (stack: [rbp + 32])
+    mov eax, dword [rbp + 32]
+    cvtsi2sd xmm8, eax
+    mulsd xmm0, xmm8
+
+    ; x9 (stack: [rbp + 40])
+    mov eax, dword [rbp + 40]
+    cvtsi2sd xmm8, eax
+    mulsd xmm0, xmm8
+
+    ; Save final result to [rdi]
+    movsd qword [rdi], xmm0
+
+    pop rbp
+    ret
 
