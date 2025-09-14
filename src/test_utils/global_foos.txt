@@ -1,2 +1,11 @@
-global_foo_label cantidad_total_de_elementos
-global_foo_label cantidad_total_de_elementos_packed
+global_foo_label strcpy
+global_foo_label malloc
+global_foo_label free
+global_foo_label EJERCICIO_1_HECHO
+global_foo_label EJERCICIO_2_HECHO
+global_foo_label EJERCICIO_3_HECHO
+global_foo_label EJERCICIO_4_HECHO
+global_foo_label ejercicio1
+global_foo_label ejercicio2
+global_foo_label ejercicio3
+global_foo_label ejercicio4

@@ -11,9 +11,9 @@ FALSE EQU 0
 ; Marca un ejercicio como hecho
 TRUE  EQU 1
 
-ITEM_OFFSET_NOMBRE EQU 9
-ITEM_OFFSET_ID EQU 16
-ITEM_OFFSET_CANTIDAD EQU 24
+ITEM_OFFSET_NOMBRE EQU 0
+ITEM_OFFSET_ID EQU 12
+ITEM_OFFSET_CANTIDAD EQU 16
 
 POINTER_SIZE EQU 4
 UINT32_SIZE EQU 8
@@ -21,37 +21,67 @@ UINT32_SIZE EQU 8
 ; Marcar el ejercicio como hecho (`true`) o pendiente (`false`).
 
 global EJERCICIO_1_HECHO
-EJERCICIO_1_HECHO: db FALSE ; Cambiar por `TRUE` para correr los tests.
+EJERCICIO_1_HECHO: db TRUE ; Cambiar por `TRUE` para correr los tests.
 
 global EJERCICIO_2_HECHO
-EJERCICIO_2_HECHO: db FALSE ; Cambiar por `TRUE` para correr los tests.
+EJERCICIO_2_HECHO: db TRUE ; Cambiar por `TRUE` para correr los tests.
 
 global EJERCICIO_3_HECHO
-EJERCICIO_3_HECHO: db FALSE ; Cambiar por `TRUE` para correr los tests.
+EJERCICIO_3_HECHO: db TRUE ; Cambiar por `TRUE` para correr los tests.
 
 global EJERCICIO_4_HECHO
 EJERCICIO_4_HECHO: db FALSE ; Cambiar por `TRUE` para correr los tests.
 
 global ejercicio1
 ejercicio1:
-	add edi, ecx
-	add edi, edx
-    add edi, ebx
-    add edi, r9d
-	mov eax, edi
+	xor rax, rax; set the acum to 0
+
+	add rax, rdi
+	add rax, rsi
+    add rax, rdx
+    add rax, rcx
+	add rax, r8
+
 	ret
 
 global ejercicio2
+;void ejercicio2(item_t* un_item, uint32_t id, uint32_t cantidad, char nombre[]);
+;puntero al struct -> rdi
+;uint_32 id -> rsi
+;uint_32 cantidad -> rdx
+;nombre[] -> rcx
 ejercicio2:
-	mov [rdi+ITEM_OFFSET_ID], rsi
-	mov [rdi+ITEM_OFFSET_CANTIDAD], rdx
-	call strcpy 
+	push rbp
+    mov rbp, rsp
+	push rdi
+	sub rsp, 8
+
+	mov [rdi+ITEM_OFFSET_ID], esi
+	mov [rdi+ITEM_OFFSET_CANTIDAD], edx
+	add rdi, ITEM_OFFSET_NOMBRE
+	mov rsi, rcx
+	call strcpy
+
+	add rsp,8
+	pop rdi
+
+	pop rbp 
 	ret
 
 
 global ejercicio3
+;uint32_t ejercicio3(uint32_t* array, uint32_t size, uint32_t (*fun_ej_3)(uint32_t a, uint32_t b));
+;puntero al array -> rdi
+;uint_32 n -> esi
+;puntero a la funcion fun -> rdx
+;fun toma
 ejercicio3:
-	cmp rsi, 0
+;n = 0 -> 64
+;n = 1 -> fun 
+    push rbp
+    mov rbp, rsp
+
+	cmp esi, 0
 	je .vacio
 	
 	mov rcx, rdi ; array
@@ -59,10 +89,21 @@ ejercicio3:
 	mov r9, 0 ; i
 
 	.loop:
-	mov rdi, r8
-	mov rsi, [rcx + r9*4]
+	push rsi ; n, largo del array
+	push r8  ; sumatoria, resultado parcial
+	push rcx ; puntero al array
+	push r9  ; indice
+
+	mov rdi, r8            ; cargo 1er param 
+	mov rsi, [rcx + r9*4]  ; cargo segundo param, 
 
 	call rdx
+
+	pop r9 ; 
+	pop rcx  ; 
+	pop r8 ;
+	pop rsi  
+
 
 	add r8, rax
 	mov rax, r8
@@ -77,6 +118,7 @@ ejercicio3:
 	mov rax, 64
 
 	.end:
+	pop rbp
 	ret
 
 global ejercicio4
