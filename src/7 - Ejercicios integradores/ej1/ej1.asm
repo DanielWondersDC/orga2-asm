@@ -144,12 +144,61 @@ es_indice_ordenado:
 ;;   ítems**
 
 global indice_a_inventario
+;item_t** indice_a_inventario(item_t** inventario, uint16_t* indice, uint16_t tamanio);
+; puntero al inventario(array de structs) -> rdi
+; puntero al array de indices(array de int16) -> rsi
+; tamanio de los arrays -> dx
 indice_a_inventario:
-	; Te recomendamos llenar una tablita acá con cada parámetro y su
-	; ubicación según la convención de llamada. Prestá atención a qué
-	; valores son de 64 bits y qué valores son de 32 bits o 8 bits.
-	;
-	; r/m64 = item_t**  inventario
-	; r/m64 = uint16_t* indice
-	; r/m16 = uint16_t  tamanio
-	ret
+	push rbp
+	mov rbp, rsp
+	push r12
+	push r13
+	push r14
+	push r15
+	push rbx
+	sub rsp, 8
+
+	xor r14, r14 ; limpio por si tiene algo en la parte alta
+
+	mov r12, rdi ; guardo el pointer al inventario en r12
+	mov r13, rsi ; guardo el pointer al array de indices en r13
+	mov r14w, dx ; guardo el tmanio en r14
+
+	xor rax,rax
+	mov rax, 8 ; limpio y meto 8 en el rax para multiplicar por la cantidad de elementos
+	mul r14w ; largo de mi nuevo array(n* 8bytes(pointer size))
+	mov rdi, rax ; llevo el size al rdi para el malloc
+
+	call malloc 
+	mov r15, rax; guardo el pointer al heap en r15
+
+	xor rbx,rbx ; i=0
+
+	.ciclo:
+		cmp bx, r14w
+		je .end 
+
+		xor r8,r8; limpio por las dudas
+		mov r8w, word[r13 + rbx * 2] ; guardo el indice en r8
+
+		mov r9, [r12 + r8 * 8] ; agarro el pointer en el array de pointers
+
+		mov [r15 + rbx * 8], r9 ; guardo el pointer en mi nuevo array en malloc
+
+		inc rbx
+		jmp .ciclo
+
+
+
+
+	.end:
+		mov rax, r15 ; guardo el pointer al nuevo array en rax
+
+		add rsp,8
+		pop rbx
+		pop r15
+		pop r14
+		pop r13
+		pop r12
+		pop rbp ; epilogo
+		ret
