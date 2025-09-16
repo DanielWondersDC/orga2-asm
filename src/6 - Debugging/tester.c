@@ -190,6 +190,7 @@ void testResults4(uint32_t* esperado, uint32_t* resultado, uint32_t* inicial[], 
 
 	for (uint32_t i = 0; i < size; i++)
 	{
+		printf("esperado:%d , resultado: %d\n",esperado[i], resultado[i]);
 		if(esperado[i] != resultado[i]){
 			iguales = false;
 		}
@@ -197,6 +198,7 @@ void testResults4(uint32_t* esperado, uint32_t* resultado, uint32_t* inicial[], 
 	
 	for (uint32_t i = 0; i < size; i++)
 	{
+		printf("inicial:%d \n",inicial[i]);
 		if(inicial[i] != NULL){
 			iguales = false;
 		}

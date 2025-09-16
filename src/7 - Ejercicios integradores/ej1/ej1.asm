@@ -14,21 +14,21 @@ TRUE  EQU 1
 ; Funciones a implementar:
 ;   - es_indice_ordenado
 global EJERCICIO_1A_HECHO
-EJERCICIO_1A_HECHO: db FALSE ; Cambiar por `TRUE` para correr los tests.
+EJERCICIO_1A_HECHO: db TRUE ; Cambiar por `TRUE` para correr los tests.
 
 ; Marca el ejercicio 1B como hecho (`true`) o pendiente (`false`).
 ;
 ; Funciones a implementar:
 ;   - indice_a_inventario
 global EJERCICIO_1B_HECHO
-EJERCICIO_1B_HECHO: db FALSE ; Cambiar por `TRUE` para correr los tests.
+EJERCICIO_1B_HECHO: db TRUE ; Cambiar por `TRUE` para correr los tests.
 
 ;########### ESTOS SON LOS OFFSETS Y TAMAÑO DE LOS STRUCTS
 ; Completar las definiciones (serán revisadas por ABI enforcer):
-ITEM_NOMBRE EQU ??
-ITEM_FUERZA EQU ??
-ITEM_DURABILIDAD EQU ??
-ITEM_SIZE EQU ??
+ITEM_NOMBRE EQU 0
+ITEM_FUERZA EQU 20
+ITEM_DURABILIDAD EQU 24
+ITEM_SIZE EQU 28
 
 ;; La funcion debe verificar si una vista del inventario está correctamente 
 ;; ordenada de acuerdo a un criterio (comparador)
@@ -54,15 +54,73 @@ ITEM_SIZE EQU ??
 ;;   de verificar que el orden sea estable.
 
 global es_indice_ordenado
+;bool es_indice_ordenado(item_t** inventario, uint16_t* indice, uint16_t tamanio, comparador_t comparador);
+; puntero al array de punteros a structs (inventario) -> rdi
+; puntero al array con indices ordenados -> rsi
+; tamanio de ambos arrays -> dx
+; comparador (puntero a una funcion)
+;((esta funcion devuelve true si el el segundo elemento es mejor que el primero)) -> rcx
 es_indice_ordenado:
-	; Te recomendamos llenar una tablita acá con cada parámetro y su
-	; ubicación según la convención de llamada. Prestá atención a qué
-	; valores son de 64 bits y qué valores son de 32 bits o 8 bits.
-	;
-	; r/m64 = item_t**     inventario
-	; r/m64 = uint16_t*    indice
-	; r/m16 = uint16_t     tamanio
-	; r/m64 = comparador_t comparador
+	push rbp
+	mov rbp,rsp ; prologo
+	push r12
+	push r13
+	push r14
+	push r15
+	push rbx
+	sub rsp, 8
+
+	xor r12, r12 ; i = 0 (indice recorredor del arreglo)
+
+	mov r13, rcx; guardo el puntero la funcion comparadora
+	mov r14, rdi ; guardo en r14 el puntero al inventario
+	mov r15, rsi ; guardo en r15 el puntero al arreglo de indices
+	mov bx, dx ; guardo el tamanio en bx
+
+	
+	cmp bx, 1 ; si el inv es de tamanio 1 voy al fin
+	je .end
+
+	sub bx, 1 ; tamanio = tamqnio -1 (porque agarro array[n +1])
+
+	.ciclo: ; voy ciclando a traves del array con indices
+		cmp bx, r12w
+		je .end
+
+		xor r8,r8
+		xor r9,r9 ; limpio la parte alta
+		mov r8w, word[r15 + r12 * 2] ; guardo el indice en r8
+		mov r9w, word[r15 + (r12 + 1) * 2] ; guardo el siguiente en r9
+		; ahora sabiendo los 2 indices voy a buscar los datos al inventario
+
+		mov rdi, [r14 + r8 * 8]; agarro los strucs del inventario y los meto en params
+		mov rsi, [r14 + r9 * 8]
+
+		call r13 ; llamo al comparador
+		
+		test rax, rax ; miro si el res es false = ekemento no ordenado bien
+		je .badEnd
+
+		inc r12; i++
+		jmp .ciclo
+
+
+
+
+	.badEnd:
+		mov rax, 0
+		jmp .end
+
+
+
+	.end:
+		add rsp,8
+		pop rbx
+		pop r15
+		pop r14
+		pop r13
+		pop r12
+		pop rbp ; epilogo
 		ret
 
 ;; Dado un inventario y una vista, crear un nuevo inventario que mantenga el

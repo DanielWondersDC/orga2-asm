@@ -15,8 +15,8 @@ ITEM_OFFSET_NOMBRE EQU 0
 ITEM_OFFSET_ID EQU 12
 ITEM_OFFSET_CANTIDAD EQU 16
 
-POINTER_SIZE EQU 4
-UINT32_SIZE EQU 8
+POINTER_SIZE EQU 8
+UINT32_SIZE EQU 4
 
 ; Marcar el ejercicio como hecho (`true`) o pendiente (`false`).
 
@@ -30,7 +30,7 @@ global EJERCICIO_3_HECHO
 EJERCICIO_3_HECHO: db TRUE ; Cambiar por `TRUE` para correr los tests.
 
 global EJERCICIO_4_HECHO
-EJERCICIO_4_HECHO: db FALSE ; Cambiar por `TRUE` para correr los tests.
+EJERCICIO_4_HECHO: db TRUE ; Cambiar por `TRUE` para correr los tests.
 
 global ejercicio1
 ejercicio1:
@@ -122,37 +122,65 @@ ejercicio3:
 	ret
 
 global ejercicio4
+;uint32_t* ejercicio4(uint32_t** array, uint32_t size, uint32_t constante);
+;puntero al arreglo de punteros -> rdi
+;tamanio del arreglo -> rsi
+;contante c -> rdx
 ejercicio4:
-	mov r12, rdi
-	mov r13, rsi
-	mov r14, rdx
+	push rbp
+	mov rbp,rsp ; prologo
 
-	xor rdi, rdi
-	mov eax, UINT32_SIZE
-	mul esi
-	mov edi, eax
+	push r12
+	push r13 ; guardo el valor original de estos porque no son volatiles
+	push r14 
+	push r15; 
+	push rbx 
+	sub rsp, 8
+	;--
+
+	mov r12, rdi ; r12 = puntero al array de punteros
+	mov r13, rsi ; r13 = tamanio del array
+	mov r14, rdx ; r14 = contante a multiplicar
+
+	xor rdi, rdi   ; rdi = 0
+	mov eax, UINT32_SIZE  
+	mul esi ; eax = eax * esi = 4 * tamanio del array
+	mov edi, eax ; move eax to edi
+
 
 	call malloc
-	mov r15, rax
+	mov r15, rax ; guardo el puntero a memoria en r15
+
 	
-	xor rbx, rbx
+	xor rbx, rbx ; i = 0
 	.loop:
 	
-	cmp rbx, r13
+	cmp rbx, r13 ; have we gone through the whole array?
 	je .end
 
-	mov r8, [r12+rbx*POINTER_SIZE]
-	mov r9d, [r8]
-	mov rax, r14
+	mov r8, [r12+rbx*POINTER_SIZE]; guardo el puntero en r8
+	mov r9d, [r8]  ; save the pointer's data in r9d
+	mov rax, r14   ; pongo n en rax para multiplicarlo por la data
 	mul r9d
-	mov [r15+rbx*UINT32_SIZE], eax
+	mov [r15+rbx*UINT32_SIZE], eax; guardo el resultado en la memoria
 	
-	mov rsi, r8 
-	call free
+	mov rdi, r8 
+
+
+	mov rdi, 0 ; aca habia un free
+
 
 	inc rbx
 	jmp .loop
 
 	.end:
 	mov rax, r15
+
+	add rsp, 8
+	pop rbx
+	pop r15
+	pop r14
+	pop r13 ; restauro valores oriignales
+	pop r12
+	pop rbp
 	ret
